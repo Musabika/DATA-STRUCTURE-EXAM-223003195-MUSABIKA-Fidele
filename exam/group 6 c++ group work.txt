@@ -1,0 +1,188 @@
+#include <iostream>
+#include <vector>
+using namespace std;
+
+class Person {
+protected:
+    string name;
+public:
+    Person(string pname) {
+        name = pname;
+    }
+};
+
+class Insurance {
+protected:
+    string provider;
+public:
+    Insurance(string iprovider) {
+        provider = iprovider;
+    }
+    void showInsurance() {
+        cout << "Insurance Provider: " << provider << endl;
+    }
+};
+
+class Patient : public Person {
+protected:
+    string diagnosis;
+    bool discharged;
+public:
+    Patient(string pname, string pdiagnosis) : Person(pname) {
+        diagnosis = pdiagnosis;
+        discharged = false;
+    }
+
+    void discharge() {
+        discharged = true;
+    }
+
+    void showStatus() {
+        cout << "Patient Name: " << name << endl;
+        cout << "Diagnosis: " << diagnosis << endl;
+        cout << "Status: " << (discharged ? "Discharged" : "Admitted") << endl;
+    }
+
+    virtual void show() {
+        showStatus();
+    }
+
+    virtual ~Patient() {}
+};
+
+class OutPatient : public Patient {
+public:
+    OutPatient(string pname, string pdiagnosis) : Patient(pname, pdiagnosis) {}
+
+    void show() override {
+        cout << "OutPatient Record:\n";
+        showStatus();
+    }
+};
+
+class InPatient : public Patient {
+protected:
+    string ward;
+public:
+    InPatient(string pname, string pdiagnosis, string pward) : Patient(pname, pdiagnosis) {
+        ward = pward;
+    }
+
+    void show() override {
+        cout << "InPatient Record:\n";
+        showStatus();
+        cout << "Ward: " << ward << endl;
+    }
+};
+
+class EmergencyPatient : public Patient {
+public:
+    EmergencyPatient(string pname, string pdiagnosis) : Patient(pname, pdiagnosis) {}
+
+    void show() override {
+        cout << "Emergency Patient Record:\n";
+        showStatus();
+    }
+};
+
+class SurgeryPatient : public InPatient, public Insurance {
+    string surgery;
+public:
+    SurgeryPatient(string pname, string pdiagnosis, string pward, string psurgery, string pprovider)
+    : InPatient(pname, pdiagnosis, pward), Insurance(pprovider) {
+        surgery = psurgery;
+    }
+
+    void show() override {
+        cout << "Surgery Patient Record:\n";
+        showStatus();
+        cout << "Ward: " << ward << endl;
+        cout << "Surgery: " << surgery << endl;
+        showInsurance();
+    }
+};
+
+class HospitalSystem {
+    vector<Patient*> patients;
+public:
+    void addPatient(Patient* p) {
+        if (patients.size() >= 100) {
+            cout << "Patient limit reached!\n";
+            delete p;
+            return;
+        }
+        patients.push_back(p);
+    }
+
+    void showAllPatients() {
+        for (Patient* p : patients) {
+            p->show();
+            cout << "-------------------\n";
+        }
+    }
+
+    ~HospitalSystem() {
+        for (auto p : patients)
+            delete p;
+    }
+};
+
+int main() {
+    HospitalSystem hs;
+    int choice;
+
+    while (true) {
+        cout << "\n--- Hospital Patient Management ---\n";
+        cout << "1. Add OutPatient\n";
+        cout << "2. Add InPatient\n";
+        cout << "3. Add EmergencyPatient\n";
+        cout << "4. Add SurgeryPatient\n";
+        cout << "5. Show All Patients\n";
+        cout << "6. Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;
+
+        if (choice == 6) break;
+
+        string name, diagnosis, ward, surgery, provider;
+
+        switch (choice) {
+            case 1:
+                cout << "Enter Name: "; cin >> ws; getline(cin, name);
+                cout << "Enter Diagnosis: "; getline(cin, diagnosis);
+                hs.addPatient(new OutPatient(name, diagnosis));
+                break;
+
+            case 2:
+                cout << "Enter Name: "; cin >> ws; getline(cin, name);
+                cout << "Enter Diagnosis: "; getline(cin, diagnosis);
+                cout << "Enter Ward: "; getline(cin, ward);
+                hs.addPatient(new InPatient(name, diagnosis, ward));
+                break;
+
+            case 3:
+                cout << "Enter Name: "; cin >> ws; getline(cin, name);
+                cout << "Enter Diagnosis: "; getline(cin, diagnosis);
+                hs.addPatient(new EmergencyPatient(name, diagnosis));
+                break;
+
+            case 4:
+                cout << "Enter Name: "; cin >> ws; getline(cin, name);
+                cout << "Enter Diagnosis: "; getline(cin, diagnosis);
+                cout << "Enter Ward: "; getline(cin, ward);
+                cout << "Enter Surgery: "; getline(cin, surgery);
+                cout << "Enter Insurance Provider: "; getline(cin, provider);
+                hs.addPatient(new SurgeryPatient(name, diagnosis, ward, surgery, provider));
+                break;
+
+            case 5:
+                hs.showAllPatients();
+                break;
+
+            default:
+                cout << "Invalid option.\n";
+        }
+    }
+
+    return 0;
+}
